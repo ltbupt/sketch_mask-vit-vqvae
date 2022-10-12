@@ -33,7 +33,7 @@ import pdb
 class AutoencoderViT(nn.Module):
 
 
-    def __init__(self, img_size=32, patch_size=4, in_chans=3,
+    def __init__(self, img_size=224, patch_size=16, in_chans=3,
                  embed_dim=1024, depth=24, num_heads=16,
                  decoder_embed_dim=512, decoder_depth=8, decoder_num_heads=16,
                  mlp_ratio=4., norm_layer=nn.LayerNorm, norm_pix_loss=False):
@@ -188,7 +188,7 @@ class AutoencoderViT(nn.Module):
         """
         imgs: [N, 3, H, W]
         pred: [N, L, p*p*3]
-        mask: [N, L], 0 is keep, 1 is remove, 
+        mask: [N, L], 0 is keep, 1 is remove,
         """
         target = self.patchify(imgs)
         if self.norm_pix_loss:
@@ -210,6 +210,12 @@ class AutoencoderViT(nn.Module):
 def vit_base_patch4_dec512d8b(**kwargs):
     model = AutoencoderViT(
         patch_size=4, embed_dim=768, depth=12, num_heads=12,
+        decoder_embed_dim=512, decoder_depth=8, decoder_num_heads=16,
+        mlp_ratio=4, norm_layer=partial(nn.LayerNorm, eps=1e-6), **kwargs)
+    return model
+def vit_base_patch16_dec512d8b(**kwargs):
+    model = AutoencoderViT(
+        patch_size=16, embed_dim=768, depth=12, num_heads=12,
         decoder_embed_dim=512, decoder_depth=8, decoder_num_heads=16,
         mlp_ratio=4, norm_layer=partial(nn.LayerNorm, eps=1e-6), **kwargs)
     return model
@@ -281,25 +287,9 @@ class VQEmbedding(nn.Module):
 class VectorQuantizedVAE(nn.Module):
     def __init__(self, input_dim, dim, K=512):  # input_dim=3 dim=256
         super().__init__()
-        self.vit = vit_base_patch4_dec512d8b()
-        self.encoder = nn.Sequential(
-            nn.Conv2d(input_dim, dim, 4, 2, 1),  # input_dim=3 dim=256
-            nn.BatchNorm2d(dim),# dim=256
-            nn.ReLU(True),
-            nn.Conv2d(dim, dim, 4, 2, 1),  # dim=256
-            ResBlock(dim),
-            ResBlock(dim),
-        )
-        self.decoder = nn.Sequential(
-            ResBlock(dim),# dim=256
-            ResBlock(dim),# dim=256
-            nn.ReLU(True),
-            nn.ConvTranspose2d(dim, dim, 4, 2, 1),# dim=256
-            nn.BatchNorm2d(dim),# dim=256
-            nn.ReLU(True),
-            nn.ConvTranspose2d(dim, input_dim, 4, 2, 1),# input_dim=3 dim=256
-            nn.Tanh()
-        )
+        self.vit = vit_base_patch16_dec512d8b()
+        self.encoder = self.vit.forward_encoder
+        self.decoder = self.vit.forward_decoder
 
         self.codebook = VQEmbedding(K, dim)# K = 512 dim = 256
         self.apply(weights_init)
@@ -351,6 +341,5 @@ if __name__ == '__main__':
     #要去掉cls_token那一维再unpatchy
     _x = v.unpatchify(latent)
     print(_x.shape)
-
 
 

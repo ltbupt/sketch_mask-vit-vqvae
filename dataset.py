@@ -3,21 +3,23 @@ import torch
 import pdb
 from opts import parse_opts
 
+
 def get_transforms(mode):
     assert mode == 'train' or mode == 'val'
     if mode == 'train':
         transform = transforms.Compose([
-            transforms.Resize((32, 32)),
+            transforms.Resize((224, 224)),
             transforms.ToTensor(),
             transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
         ])
     elif mode == 'val':
         transform = transforms.Compose([
-            transforms.Resize((32, 32)),
+            transforms.Resize((224, 224)),
             transforms.ToTensor(),
             transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
         ])
     return transform
+
 
 
 def get_dataloader(args):

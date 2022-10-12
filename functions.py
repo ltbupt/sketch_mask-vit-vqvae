@@ -47,12 +47,12 @@ class VectorQuantization(Function):
             # 理解: distances.Size([1024, 512]) 1024个 维度为512组成的codebook 
             # 在1024个中各自找到最代表这一个的表征
             _, indices_flatten = torch.min(distances, dim=1)# indices_flatten.Size([B*num_patches+1])
-            indices = indices_flatten.view(*inputs_size[:-1])# indices.Size([B,num_patches+1)
+            indices = indices_flatten.view(*inputs_size[:-1]) # indices.Size([B,num_patches+1) 是int型的index
             ctx.mark_non_differentiable(indices)# 不知道是干嘛的
             '''
             ctx.mark_non_differentiable():如果输出不可微分的话，通过此功能被告知
             '''
-            return indices# indices.Size([16, 8, 8])
+            return indices # indices.Size([B,num_patches+1)
 
     @staticmethod
     def backward(ctx, grad_output):
@@ -60,6 +60,8 @@ class VectorQuantization(Function):
             '`VectorQuantization`. The function `VectorQuantization` '
             'is not differentiable. Use `VectorQuantizationStraightThrough` '
             'if you want a straight-through estimator of the gradient.')
+
+
 
 class VectorQuantizationStraightThrough(Function):
     @staticmethod
@@ -76,9 +78,11 @@ class VectorQuantizationStraightThrough(Function):
         # -----------------------------------------------------------------------------------------------
         # step 1 : 根据input判断在当前codebook中距离最近的idx的表征
         indices = vq(inputs, codebook)  # indices.Size([B,num_patches+1])
-        indices_flatten = indices.view(-1)  # indices_flatten.shape([B*num_patches+1])
+        indices_flatten = indices.view(-1)  # indices_flatten.shape([B*num_patches+1]) #visual_tokens
+
         ctx.save_for_backward(indices_flatten, codebook)  # 保存前向传播的输入和输出，为了后面反向传播使用
         ctx.mark_non_differentiable(indices_flatten)
+
 
         # -----------------------------------------------------------------------------------------------
         # step 2 : 根据idx的表征 得到响应的codes
@@ -86,7 +90,7 @@ class VectorQuantizationStraightThrough(Function):
             index=indices_flatten)
         codes = codes_flatten.view_as(inputs)  # codes.Size([B,num_patches+1,768)
 
-        return (codes, indices_flatten)
+        return codes, indices_flatten
 
     @staticmethod
     def backward(ctx, grad_output, grad_indices):
@@ -106,6 +110,7 @@ class VectorQuantizationStraightThrough(Function):
             grad_codebook.index_add_(0, indices, grad_output_flatten)
 
         return (grad_inputs, grad_codebook)
+
 
 vq = VectorQuantization.apply
 vq_st = VectorQuantizationStraightThrough.apply

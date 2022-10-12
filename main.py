@@ -1,4 +1,6 @@
 import os
+import pdb
+
 import numpy as np
 import torch
 import torch.nn.functional as F
@@ -53,7 +55,6 @@ def main(args):
         print('step 3 : train...')
         best_loss = -1.
         for epoch in range(args.num_epochs):
-            torch.cuda.empty_cache()
             print('epoch : {}'.format(epoch))
             torch.cuda.empty_cache()
 

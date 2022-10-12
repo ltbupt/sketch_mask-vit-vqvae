@@ -1,11 +1,14 @@
+import pdb
+
 from tqdm import tqdm
 import torch
 import torch.nn.functional as F
 
+
+
 def train_one_epoch(data_loader, model, optimizer, args, writer):
     for images, _ in tqdm(data_loader):
         images = images.to(args.device)# images.shape([128, 3, 32, 32])
-
         optimizer.zero_grad()
         x_recon, z_e_x, z_q_x = model(images)
         # model.py 115行
