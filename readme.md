@@ -4,3 +4,6 @@
 使用cifar10数据集，发现在普通的image上未出现像素块问题
 ## 第二次debug test_vit_debug_02
 使用sketch数据集，将reconstruction loss * 10，保证三个loss间数量级一致，结果仍存在之前的像素块问题，但相比于初次这一问题有所缓解
+## final weight
+/root/sketch_mask/beit_lt/codebook_weight/vit_vae_16_224_8192.pt
+original
