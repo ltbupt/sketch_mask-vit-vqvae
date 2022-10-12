@@ -6,4 +6,8 @@
 使用sketch数据集，将reconstruction loss * 10，保证三个loss间数量级一致，结果仍存在之前的像素块问题，但相比于初次这一问题有所缓解
 ## final weight
 /root/sketch_mask/beit_lt/codebook_weight/vit_vae_16_224_8192.pt
-original
+- original
+![original](https://user-images.githubusercontent.com/89373310/195238018-2140bf03-d530-4a74-880f-2393fb0fcb04.jpg)
+- reconstruction
+![reconstruction](https://user-images.githubusercontent.com/89373310/195238095-849aad8f-5328-4b06-8fd6-9a76daf6d150.jpg)
+
